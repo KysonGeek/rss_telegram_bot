@@ -1,16 +1,20 @@
 import mysql.connector
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 conn = mysql.connector.connect(
-    host="localhost",
+    host=os.getenv("DB_HOST"),
     port=3306,
-    user="root",
-    password="root",
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PW"),
     database="mysql"
 )
 
 cursor = conn.cursor()
 
 def insert(title, summary, url):
+    print("insert title: %s" % title)
     cursor.execute("insert into node_seek_rss (title,summary,url) values (%s,%s,%s)", (title,summary, url))
     conn.commit()
 

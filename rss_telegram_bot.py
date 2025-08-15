@@ -1,17 +1,17 @@
 import os
 import time
-import json
 import requests
 import feedparser
 from dotenv import load_dotenv
 from mysql_adapter import query, insert, load_keyword
+from datetime import datetime
 # 加载环境变量
 load_dotenv()
 
 RSS_URL = os.getenv("RSS_URL")
 TELEGRAM_API = os.getenv("TELEGRAM_API")
 CHAT_ID = os.getenv("CHAT_ID")
-SLEEP_S = int(os.getenv("sleep_s"))
+SLEEP_S = int(os.getenv("SLEEP_S"))
 
 def load_sent():
     return load_keyword()
@@ -33,7 +33,9 @@ def send_to_telegram(text):
 
 def monitor_rss():
     while True:
-        print("🔍 Checking RSS feed...")
+        now = datetime.now()
+        print("🔍 Checking RSS feed... now: %s" % now)
+
         feed = feedparser.parse(RSS_URL)
         keyword_DB = load_sent()
         for entry in feed.entries:
@@ -47,6 +49,7 @@ def monitor_rss():
                 escaped_title = escape_markdown(title)
                 escaped_link = escape_markdown(link)
                 message = f"[{escaped_title}]({escaped_link})"
+                print("message %s" % message)
                 send_to_telegram(message)
 
                 insert(title, summary, link)
