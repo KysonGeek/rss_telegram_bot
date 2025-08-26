@@ -29,14 +29,18 @@ def query(url):
     return result
 
 def load_keyword():
-    cursor.execute("select filter_word from keyword")
+    cursor.execute("select filter_word,type from keyword")
     columns = [desc[0] for desc in cursor.description]
     results = cursor.fetchall()
-    result =[]
+    keyword =[]
+    negword =[]
     for row in results:
         row_dict = dict(zip(columns, row))
-        result.append(row_dict[columns[0]])
-    return result
+        if row_dict[columns[1]]==1:
+            keyword.append(row_dict[columns[0]])
+        else:
+            negword.append(row_dict[columns[0]])
+    return keyword, negword
 
 if __name__ == '__main__':
     print(load_keyword())

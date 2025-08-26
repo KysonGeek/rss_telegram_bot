@@ -33,13 +33,11 @@ def send_to_telegram(text):
 
 def monitor_rss():
     while True:
-        now = datetime.now()
-        print("🔍 Checking RSS feed... now: %s" % now)
 
         feed = feedparser.parse(RSS_URL)
-        keyword_DB = load_sent()
+        keyword_DB, negword_DB = load_sent()
         for entry in feed.entries:
-            if keyword_DB and not any(keyword in entry.title for keyword in keyword_DB):
+            if keyword_DB and (not any(keyword.lower() in entry.title.lower() for keyword in keyword_DB) or any(negword.lower() in entry.title.lower() for negword in negword_DB)):
                 continue
             sent_links = query(entry.link)
             if not sent_links:
@@ -49,12 +47,9 @@ def monitor_rss():
                 escaped_title = escape_markdown(title)
                 escaped_link = escape_markdown(link)
                 message = f"[{escaped_title}]({escaped_link})"
-                print("message %s" % message)
                 send_to_telegram(message)
 
                 insert(title, summary, link)
-            else:
-                print("skip")
 
         time.sleep(SLEEP_S)
 def escape_markdown(text):
