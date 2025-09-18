@@ -33,23 +33,27 @@ def send_to_telegram(text):
 
 def monitor_rss():
     while True:
+        try:
+            feed = feedparser.parse(RSS_URL)
+            keyword_DB, negword_DB = load_sent()
+            for entry in feed.entries:
+                if keyword_DB and (not any(keyword.lower() in entry.title.lower() for keyword in keyword_DB) or any(negword.lower() in entry.title.lower() for negword in negword_DB)):
+                    continue
+                sent_links = query(entry.link)
+                if not sent_links:
+                    title = entry.title
+                    link = entry.link
+                    summary = entry.summary if 'summary' in entry else ''
+                    escaped_title = escape_markdown(title)
+                    escaped_link = escape_markdown(link)
+                    message = f"[{escaped_title}]({escaped_link})"
+                    send_to_telegram(message)
 
-        feed = feedparser.parse(RSS_URL)
-        keyword_DB, negword_DB = load_sent()
-        for entry in feed.entries:
-            if keyword_DB and (not any(keyword.lower() in entry.title.lower() for keyword in keyword_DB) or any(negword.lower() in entry.title.lower() for negword in negword_DB)):
-                continue
-            sent_links = query(entry.link)
-            if not sent_links:
-                title = entry.title
-                link = entry.link
-                summary = entry.summary if 'summary' in entry else ''
-                escaped_title = escape_markdown(title)
-                escaped_link = escape_markdown(link)
-                message = f"[{escaped_title}]({escaped_link})"
-                send_to_telegram(message)
+                    insert(title, summary, link)
+        except Exception as ex:
+            print("捕获到异常：", ex)
 
-                insert(title, summary, link)
+
 
         time.sleep(SLEEP_S)
 def escape_markdown(text):
